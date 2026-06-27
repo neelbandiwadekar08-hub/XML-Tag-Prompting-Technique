@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Structured Prompting with Claude: The XML Tag Method</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d1117;
+      --surface:   #161b22;
+      --surface2:  #1c2230;
+      --border:    #2a3347;
+      --text:      #e6edf3;
+      --muted:     #7d8fa8;
+      --role:      #f6c90e;
+      --context:   #38bdf8;
+      --instr:     #a78bfa;
+      --constr:    #fb923c;
+      --output:    #4ade80;
+      --accent:    #a78bfa;
+      --radius:    10px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    /* NAV */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(13,17,23,0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 54px;
+    }
+    .nav-brand { font-weight: 800; font-size: 0.9rem; color: var(--accent); text-decoration: none; letter-spacing: 0.01em; }
+    .nav-links { display: flex; gap: 1.5rem; }
+    .nav-links a { font-size: 0.8rem; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+    .nav-links a:hover { color: var(--text); }
+
+    /* HERO */
+    .hero {
+      text-align: center;
+      padding: 5rem 1.5rem 3rem;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .eyebrow {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 1rem;
+    }
+    h1 {
+      font-size: clamp(1.9rem, 5vw, 3rem);
+      font-weight: 800; line-height: 1.15;
+      margin-bottom: 1rem; color: var(--text);
+    }
+    h1 span { color: var(--accent); }
+    .hero-sub {
+      color: var(--muted); font-size: 1rem;
+      max-width: 480px; margin: 0 auto 2rem;
+    }
+    .hero-badges { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; }
+    .badge {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; padding: 0.35em 0.9em;
+      border-radius: 999px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--muted);
+    }
+    .badge.hi { border-color: var(--accent); color: var(--accent); }
+
+    /* SECTIONS */
+    .section { max-width: 860px; margin: 0 auto; padding: 3.5rem 1.5rem; }
+    .section + .section { border-top: 1px solid var(--border); }
+    .section-eye {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 0.5rem;
+    }
+    h2 { font-size: 1.55rem; font-weight: 800; margin-bottom: 0.7rem; }
+    p { color: var(--muted); margin-bottom: 0.9rem; }
+    p strong { color: var(--text); }
+
+    /* BEFORE / AFTER */
+    .ba-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.8rem; }
+    @media(max-width:600px){ .ba-grid { grid-template-columns: 1fr; } }
+    .ba-card { border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+    .ba-card.bad  { border-color: #ef4444; }
+    .ba-card.good { border-color: var(--output); }
+    .ba-head {
+      padding: 0.5rem 1rem; font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .ba-card.bad  .ba-head { background: rgba(239,68,68,0.12);  color: #ef4444; }
+    .ba-card.good .ba-head { background: rgba(74,222,128,0.10); color: var(--output); }
+    .ba-body {
+      padding: 1rem 1.1rem; font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem; line-height: 1.7;
+      color: var(--muted); background: var(--surface); white-space: pre-wrap;
+    }
+    .ba-card.good .ba-body { color: var(--text); }
+
+    /* TAG REFERENCE GRID */
+    .tag-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 0.9rem; margin-top: 1.8rem; }
+    .tag-card {
+      border-radius: var(--radius); padding: 1rem 1.1rem;
+      border: 1px solid var(--border); position: relative; overflow: hidden;
+    }
+    .tag-card::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    }
+    .tag-card.role    { background: rgba(246,201,14,0.07);  border-color: var(--role);   }
+    .tag-card.role::after    { background: var(--role); }
+    .tag-card.ctx     { background: rgba(56,189,248,0.07);  border-color: var(--context);}
+    .tag-card.ctx::after     { background: var(--context); }
+    .tag-card.instr   { background: rgba(167,139,250,0.07); border-color: var(--instr);  }
+    .tag-card.instr::after   { background: var(--instr); }
+    .tag-card.constr  { background: rgba(251,146,60,0.07);  border-color: var(--constr); }
+    .tag-card.constr::after  { background: var(--constr); }
+    .tag-card.out     { background: rgba(74,222,128,0.07);  border-color: var(--output); }
+    .tag-card.out::after     { background: var(--output); }
+    .tag-name { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 600; margin-bottom: 0.35rem; }
+    .tag-card.role   .tag-name { color: var(--role); }
+    .tag-card.ctx    .tag-name { color: var(--context); }
+    .tag-card.instr  .tag-name { color: var(--instr); }
+    .tag-card.constr .tag-name { color: var(--constr); }
+    .tag-card.out    .tag-name { color: var(--output); }
+    .tag-title { font-size: 0.88rem; font-weight: 700; color: var(--text); margin-bottom: 0.2rem; }
+    .tag-desc  { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+    .tag-without { font-size: 0.72rem; color: var(--muted); margin-top: 0.4rem; font-style: italic; }
+
+    /* TABS */
+    .tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .tab {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 999px; color: var(--muted); cursor: pointer;
+      font-size: 0.8rem; font-weight: 600; padding: 0.4em 1.1em;
+      transition: all 0.15s; font-family: inherit;
+    }
+    .tab:hover { border-color: var(--accent); color: var(--accent); }
+    .tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* PROMPT BLOCK */
+    .prompt-block {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden; margin-bottom: 1rem;
+    }
+    .prompt-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.5rem 1rem; background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+    .prompt-bar-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+    .copy-btn {
+      background: none; border: 1px solid var(--border); border-radius: 6px;
+      color: var(--muted); cursor: pointer; font-size: 0.7rem; font-weight: 600;
+      padding: 0.22em 0.7em; transition: all 0.15s; font-family: inherit;
+    }
+    .copy-btn:hover { border-color: var(--output); color: var(--output); }
+    .copy-btn.ok    { border-color: var(--output); color: var(--output); }
+    .prompt-code {
+      padding: 1.1rem 1.2rem; font-family: 'JetBrains Mono', monospace;
+      font-size: 0.77rem; line-height: 1.8; overflow-x: auto; white-space: pre;
+    }
+    /* tag colors inside code */
+    .t-role    { color: var(--role); }
+    .t-ctx     { color: var(--context); }
+    .t-instr   { color: var(--instr); }
+    .t-constr  { color: var(--constr); }
+    .t-out     { color: var(--output); }
+    .t-content { color: var(--text); }
+
+    /* WHY CARD */
+    .why {
+      background: rgba(167,139,250,0.07); border: 1px solid rgba(167,139,250,0.22);
+      border-radius: var(--radius); padding: 0.9rem 1.1rem; margin-top: 0.8rem;
+    }
+    .why-eye { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.3rem; }
+    .why p { color: var(--text); font-size: 0.85rem; margin: 0; }
+    .why code { color: var(--role); font-family: 'JetBrains Mono', monospace; font-size: 0.8em; }
+
+    /* TIP BOX */
+    .tip {
+      background: rgba(56,189,248,0.06); border: 1px solid rgba(56,189,248,0.22);
+      border-radius: var(--radius); padding: 1.1rem 1.3rem; margin-top: 1.5rem;
+    }
+    .tip-eye { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--context); margin-bottom: 0.4rem; }
+    .tip p { color: var(--text); font-size: 0.88rem; margin: 0; }
+    .tip a { color: var(--context); }
+
+    /* STEPS */
+    .steps { list-style: none; margin-top: 0.9rem; display: flex; flex-direction: column; gap: 0.55rem; }
+    .steps li { display: flex; align-items: flex-start; gap: 0.8rem; font-size: 0.86rem; color: var(--text); }
+    .step-n {
+      flex-shrink: 0; width: 24px; height: 24px; background: var(--accent);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 0.68rem; font-weight: 800; color: #fff;
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border); padding: 2rem 1.5rem;
+      text-align: center; color: var(--muted); font-size: 0.78rem;
+    }
+    footer a { color: var(--context); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-brand">🧠 XML Tag Method</a>
+  <div class="nav-links">
+    <a href="#problem">Problem</a>
+    <a href="#tags">Tags</a>
+    <a href="#examples">Examples</a>
+    <a href="#tip">Tip</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="eyebrow">Prompt Engineering with Claude</div>
+  <h1>Stop writing one big paragraph.<br><span>Use XML tags instead.</span></h1>
+  <p class="hero-sub">
+    A structured prompt tells Claude exactly who to be, what to do, and how to respond.
+    No guessing. No generic answers.
+  </p>
+  <div class="hero-badges">
+    <span class="badge hi">Based on Anthropic Docs</span>
+    <span class="badge">3 Real Examples</span>
+    <span class="badge">Copy-Paste Ready</span>
+    <span class="badge">Beginner Friendly</span>
+  </div>
+</div>
+
+<!-- THE PROBLEM -->
+<div class="section" id="problem">
+  <div class="section-eye">The Problem</div>
+  <h2>One paragraph means Claude is guessing</h2>
+  <p>
+    Every unstructured prompt forces Claude to silently answer three questions before it can even start.
+    Get any of them wrong and you get a generic response.
+  </p>
+
+  <div class="ba-grid">
+    <div class="ba-card bad">
+      <div class="ba-head">Without XML tags</div>
+      <div class="ba-body">I work in a factory and we keep having
+quality issues on the line, three
+machines failed twice this week and
+the supervisor doesn't know why.
+Can you help figure out what's wrong?
+
+Claude asks itself:
+→ Who should I be?
+→ What exactly is the task?
+→ What should the answer look like?</div>
+    </div>
+    <div class="ba-card good">
+      <div class="ba-head">With XML tags</div>
+      <div class="ba-body">&lt;role&gt;Manufacturing quality engineer&lt;/role&gt;
+
+&lt;context&gt;
+  3 machines failed twice this week.
+  No confirmed root cause yet.
+&lt;/context&gt;
+
+&lt;instructions&gt;
+  1. Diagnose root causes.
+  2. Recommend fixes.
+  3. Suggest prevention.
+&lt;/instructions&gt;
+
+&lt;output_format&gt;
+  Root Causes · Fixes · Prevention
+&lt;/output_format&gt;</div>
+    </div>
+  </div>
+</div>
+
+<!-- THE FIVE TAGS -->
+<div class="section" id="tags">
+  <div class="section-eye">The Method</div>
+  <h2>Five tags. Each one has a single job.</h2>
+  <p>
+    The tag names are not fixed. Use whatever fits your domain and stay consistent across prompts.
+  </p>
+
+  <div class="tag-grid">
+    <div class="tag-card role">
+      <div class="tag-name">&lt;role&gt;</div>
+      <div class="tag-title">Who Claude Is</div>
+      <div class="tag-desc">Sets the expertise and perspective for every answer that follows.</div>
+      <div class="tag-without">Without it: generic, surface-level responses.</div>
+    </div>
+    <div class="tag-card ctx">
+      <div class="tag-name">&lt;context&gt;</div>
+      <div class="tag-title">The Situation</div>
+      <div class="tag-desc">Gives Claude the background it needs to understand your specific problem.</div>
+      <div class="tag-without">Without it: Claude fills gaps with assumptions.</div>
+    </div>
+    <div class="tag-card instr">
+      <div class="tag-name">&lt;instructions&gt;</div>
+      <div class="tag-title">What To Do</div>
+      <div class="tag-desc">Numbered steps telling Claude exactly what to do and in what order.</div>
+      <div class="tag-without">Without it: Claude decides the scope, not you.</div>
+    </div>
+    <div class="tag-card constr">
+      <div class="tag-name">&lt;constraints&gt;</div>
+      <div class="tag-title">The Rules</div>
+      <div class="tag-desc">Sets the limits so Claude stays practical and on-scope.</div>
+      <div class="tag-without">Without it: answers that look right but are not usable.</div>
+    </div>
+    <div class="tag-card out">
+      <div class="tag-name">&lt;output_format&gt;</div>
+      <div class="tag-title">What It Looks Like</div>
+      <div class="tag-desc">Describes the exact shape and structure of the response you want.</div>
+      <div class="tag-without">Without it: different structure every single time.</div>
+    </div>
+  </div>
+</div>
+
+<!-- EXAMPLES -->
+<div class="section" id="examples">
+  <div class="section-eye">Real-World Examples</div>
+  <h2>Three domains. Same five-tag structure.</h2>
+  <p>Click a tab to switch examples. Copy any prompt straight into Claude and replace the context with your own situation.</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('prod', this)">🏭 Production</button>
+    <button class="tab" onclick="switchTab('sales', this)">💼 Sales</button>
+    <button class="tab" onclick="switchTab('pm', this)">📋 Project Management</button>
+  </div>
+
+  <!-- PRODUCTION -->
+  <div class="tab-panel active" id="tab-prod">
+    <p><strong>Situation:</strong> Three machines on the assembly line keep failing with no confirmed root cause.</p>
+    <div class="prompt-block">
+      <div class="prompt-bar">
+        <span class="prompt-bar-title">Production Example</span>
+        <button class="copy-btn" onclick="copyCode(this, 'code-prod')">Copy</button>
+      </div>
+      <div class="prompt-code" id="code-prod"><span class="t-role">&lt;role&gt;</span>
+<span class="t-content">  You are a manufacturing quality engineer with 10 years of production floor experience.</span>
+<span class="t-role">&lt;/role&gt;</span>
+
+<span class="t-ctx">&lt;context&gt;</span>
+<span class="t-content">  Three machines on our assembly line have each failed twice this week.</span>
+<span class="t-content">  We suspect operator error or equipment wear but have no confirmed root cause.</span>
+<span class="t-ctx">&lt;/context&gt;</span>
+
+<span class="t-instr">&lt;instructions&gt;</span>
+<span class="t-content">  1. List the three most likely root causes of repeated machine failure.</span>
+<span class="t-content">  2. Recommend a short-term workaround for each.</span>
+<span class="t-content">  3. Suggest one long-term prevention measure.</span>
+<span class="t-instr">&lt;/instructions&gt;</span>
+
+<span class="t-constr">&lt;constraints&gt;</span>
+<span class="t-content">  - Solutions must be actionable by a team of five operators.</span>
+<span class="t-content">  - Avoid recommendations that require outside contractors or capital expenditure.</span>
+<span class="t-constr">&lt;/constraints&gt;</span>
+
+<span class="t-out">&lt;output_format&gt;</span>
+<span class="t-content">  Root Causes (3 bullets)</span>
+<span class="t-content">  Short-Term Fixes (one per cause, numbered)</span>
+<span class="t-content">  Long-Term Prevention (1 paragraph)</span>
+<span class="t-out">&lt;/output_format&gt;</span></div>
+    </div>
+    <div class="why">
+      <div class="why-eye">Why this works</div>
+      <p>The <code>&lt;role&gt;</code> anchors every answer in production-floor thinking, not generic advice. The <code style="color:var(--constr)">&lt;constraints&gt;</code> prevent Claude from recommending something impractical like hiring a specialist. The <code style="color:var(--out)">&lt;output_format&gt;</code> gives you the same structure every time you run it.</p>
+    </div>
+  </div>
+
+  <!-- SALES -->
+  <div class="tab-panel" id="tab-sales">
+    <p><strong>Situation:</strong> A key client's usage has dropped 40% and their contract renews in two weeks.</p>
+    <div class="prompt-block">
+      <div class="prompt-bar">
+        <span class="prompt-bar-title">Sales Example</span>
+        <button class="copy-btn" onclick="copyCode(this, 'code-sales')">Copy</button>
+      </div>
+      <div class="prompt-code" id="code-sales"><span class="t-role">&lt;role&gt;</span>
+<span class="t-content">  You are a senior B2B sales coach with experience in SaaS account management.</span>
+<span class="t-role">&lt;/role&gt;</span>
+
+<span class="t-ctx">&lt;context&gt;</span>
+<span class="t-content">  A key client's annual contract renews in two weeks.</span>
+<span class="t-content">  Their product usage has dropped 40% this quarter and they have not responded</span>
+<span class="t-content">  to two check-in emails.</span>
+<span class="t-ctx">&lt;/context&gt;</span>
+
+<span class="t-instr">&lt;instructions&gt;</span>
+<span class="t-content">  1. Identify the most likely reasons for reduced engagement.</span>
+<span class="t-content">  2. Suggest three talking points to open the renewal conversation.</span>
+<span class="t-content">  3. Recommend how to handle a price objection if it comes up.</span>
+<span class="t-instr">&lt;/instructions&gt;</span>
+
+<span class="t-constr">&lt;constraints&gt;</span>
+<span class="t-content">  - Tone must be consultative, not pushy.</span>
+<span class="t-content">  - Do not suggest discounting before understanding the client's actual concern.</span>
+<span class="t-constr">&lt;/constraints&gt;</span>
+
+<span class="t-out">&lt;output_format&gt;</span>
+<span class="t-content">  Risk Assessment (2 sentences)</span>
+<span class="t-content">  Opening Talking Points (3 bullets)</span>
+<span class="t-content">  Objection Handling Script (short paragraph)</span>
+<span class="t-out">&lt;/output_format&gt;</span></div>
+    </div>
+    <div class="why">
+      <div class="why-eye">Why this works</div>
+      <p>The <code style="color:var(--constr)">&lt;constraints&gt;</code> tag protects the sales strategy. Without it, Claude might jump straight to offering a discount before understanding the real problem. The <code style="color:var(--out)">&lt;output_format&gt;</code> produces something the rep can print and bring to the call.</p>
+    </div>
+  </div>
+
+  <!-- PROJECT MANAGEMENT -->
+  <div class="tab-panel" id="tab-pm">
+    <p><strong>Situation:</strong> A product launch is three weeks behind and leadership has not been updated yet.</p>
+    <div class="prompt-block">
+      <div class="prompt-bar">
+        <span class="prompt-bar-title">Project Management Example</span>
+        <button class="copy-btn" onclick="copyCode(this, 'code-pm')">Copy</button>
+      </div>
+      <div class="prompt-code" id="code-pm"><span class="t-role">&lt;role&gt;</span>
+<span class="t-content">  You are a senior project manager communicating with executive stakeholders.</span>
+<span class="t-role">&lt;/role&gt;</span>
+
+<span class="t-ctx">&lt;context&gt;</span>
+<span class="t-content">  A product launch project is three weeks behind schedule due to a delayed</span>
+<span class="t-content">  vendor integration. The core team is aware but leadership has not been formally updated.</span>
+<span class="t-ctx">&lt;/context&gt;</span>
+
+<span class="t-instr">&lt;instructions&gt;</span>
+<span class="t-content">  1. Draft a concise status update email for senior leadership.</span>
+<span class="t-content">  2. Include the reason for the delay without assigning blame.</span>
+<span class="t-content">  3. Propose a revised timeline and the key decision needed from leadership.</span>
+<span class="t-instr">&lt;/instructions&gt;</span>
+
+<span class="t-constr">&lt;constraints&gt;</span>
+<span class="t-content">  - Email must be under 150 words.</span>
+<span class="t-content">  - Tone should be confident and solution-focused, not defensive.</span>
+<span class="t-constr">&lt;/constraints&gt;</span>
+
+<span class="t-out">&lt;output_format&gt;</span>
+<span class="t-content">  Subject Line</span>
+<span class="t-content">  Email Body (under 150 words)</span>
+<span class="t-content">  Decision Required (1 sentence, clearly flagged)</span>
+<span class="t-out">&lt;/output_format&gt;</span></div>
+    </div>
+    <div class="why">
+      <div class="why-eye">Why this works</div>
+      <p>The <code style="color:var(--out)">&lt;output_format&gt;</code> tag is unusually precise here — under 150 words with a flagged decision line. That level of specificity is exactly what makes the response immediately usable rather than something you have to rewrite before sending.</p>
+    </div>
+  </div>
+</div>
+
+<!-- TIP -->
+<div class="section" id="tip">
+  <div class="section-eye">Save Time</div>
+  <h2>Stop retyping your tag structure every conversation</h2>
+  <p>
+    Every word you type uses part of Claude's context window. Retyping the same five tags
+    in every new chat wastes tokens on setup instead of the actual task.
+  </p>
+  <div class="tip">
+    <div class="tip-eye">Use Claude Projects instead</div>
+    <p>Save your tag structure once under Project Instructions and every chat in that project inherits it automatically.</p>
+    <ul class="steps" style="margin-top:0.8rem;">
+      <li><span class="step-n">1</span>Go to <a href="https://claude.ai" target="_blank">claude.ai</a> and click Projects in the left sidebar</li>
+      <li><span class="step-n">2</span>Create a new project and give it a name</li>
+      <li><span class="step-n">3</span>Paste your tag structure into Project Instructions</li>
+      <li><span class="step-n">4</span>Every chat inside that project uses it automatically</li>
+    </ul>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>
+    Techniques sourced from
+    <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices" target="_blank">Anthropic's official prompting documentation</a>
+    &nbsp;·&nbsp;
+    <a href="https://www.linkedin.com/in/neel-nagesh-bandiwadekar-478737272/" target="_blank">Connect on LinkedIn</a>
+    &nbsp;·&nbsp; June 2026
+  </p>
+</footer>
+
+<script>
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  function copyCode(btn, id) {
+    const el = document.getElementById(id);
+    const text = el.innerText || el.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('ok');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('ok'); }, 2000);
+    });
+  }
+</script>
+</body>
+</html>
