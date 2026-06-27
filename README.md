@@ -1,4 +1,4 @@
-# 🧠 Structured Prompting with Claude: The XML Label Method
+# 🧠 Structured Prompting with Claude: The XML Tag Method
 
 > Stop writing one big paragraph. Label your sections instead.
 > Claude reads labeled prompts the way a professional reads a brief: clearly, completely, and without guessing.
@@ -10,7 +10,7 @@
 
 ## What This Is
 
-A practical reference for structuring Claude prompts using XML labels, based directly on Anthropic's official prompting best practices.
+A practical reference for structuring Claude prompts using XML Tags, based directly on Anthropic's official prompting best practices.
 
 Instead of typing one block of text and hoping Claude figures out what matters, you split your prompt into labeled sections. Each label has one job. Claude handles the rest.
 
