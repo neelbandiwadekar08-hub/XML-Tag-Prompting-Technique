@@ -1,7 +1,7 @@
 # 🧠 Structured Prompting with Claude: The XML Tag Method
 
 > Stop writing one big paragraph. Label your sections instead.
-> Claude reads labeled prompts the way a professional reads a brief: clearly, completely, and without guessing.
+> Claude reads tagged prompts the way a professional reads a brief: clearly, completely, and without guessing.
 
 [![Anthropic Docs](https://img.shields.io/badge/Source-Anthropic%20Official%20Docs-blue?style=for-the-badge)](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices)
 [![LinkedIn](https://img.shields.io/badge/Connect-LinkedIn-0A66C2?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/neel-nagesh-bandiwadekar-478737272/)
@@ -10,9 +10,9 @@
 
 ## What This Is
 
-A practical reference for structuring Claude prompts using XML Tags, based directly on Anthropic's official prompting best practices.
+A practical reference for structuring Claude prompts using XML tags, based directly on Anthropic's official prompting best practices.
 
-Instead of typing one block of text and hoping Claude figures out what matters, you split your prompt into labeled sections. Each label has one job. Claude handles the rest.
+Instead of typing one block of text and hoping Claude figures out what matters, you split your prompt into tagged sections. Each tag has one job. Claude handles the rest.
 
 This repo accompanies a LinkedIn post showing the before/after in a real supply chain example. The examples here go further, across production, sales, and project management.
 
@@ -26,13 +26,13 @@ When you write an unstructured prompt, Claude silently answers three questions b
 - What exactly is the task?
 - What should the answer look like?
 
-If it guesses wrong on any of them, you get a generic response and go back and forth fixing it. Labels eliminate the guesswork entirely.
+If it guesses wrong on any of them, you get a generic response and go back and forth fixing it. XML tags eliminate the guesswork entirely.
 
 ---
 
-## The Five Labels
+## The Five Tags
 
-| Label | What It Tells Claude | Without It |
+| Tag | What It Tells Claude | Without It |
 |---|---|---|
 | `<role>` | Who to be and what expertise to bring | Surface-level, generic answers |
 | `<context>` | The situation and why it matters | Claude fills gaps with assumptions |
@@ -40,13 +40,13 @@ If it guesses wrong on any of them, you get a generic response and go back and f
 | `<constraints>` | Rules, limits, and what to avoid | Answers that look right but are not usable |
 | `<output_format>` | What the response should look like | Different structure every single time |
 
-> The label names are not fixed. `<background>` works as well as `<context>`. `<rules>` works as well as `<constraints>`. Pick names that fit your domain and stay consistent.
+> The tag names are not fixed. `<background>` works as well as `<context>`. `<rules>` works as well as `<constraints>`. Pick names that fit your domain and stay consistent.
 
 ---
 
 ## Real-World Examples
 
-Three domains. Same five-label structure throughout. Copy any of these into Claude and replace the context with your own situation.
+Three domains. Same five-tag structure throughout. Copy any of these into Claude and replace the context with your own situation.
 
 ---
 
@@ -149,7 +149,7 @@ Three domains. Same five-label structure throughout. Copy any of these into Clau
 
 ## One Tip That Saves You Time
 
-Retyping your full label structure into every new Claude conversation wastes tokens. Save it once in a Claude Project under "Project Instructions" and every chat inside that project inherits it automatically.
+Retyping your full tag structure into every new Claude conversation wastes tokens. Save it once in a Claude Project under "Project Instructions" and every chat inside that project inherits it automatically.
 
 Go to [claude.ai](https://claude.ai) · Projects · New Project · Project Instructions
 
@@ -160,7 +160,7 @@ Go to [claude.ai](https://claude.ai) · Projects · New Project · Project Instr
 | File | What It Is |
 |---|---|
 | `README.md` | This page, the reference guide with all examples |
-| `index.html` | Interactive demo with color-coded labels and copy buttons |
+| `index.html` | Interactive demo with color-coded tags and copy buttons |
 
 Open `index.html` in any browser. No setup or installation needed.
 
